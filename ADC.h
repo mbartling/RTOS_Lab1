@@ -18,7 +18,7 @@
  * sample rate: <=125,000 samples/second
  * 
  * @param channelNum the desired ADC channel
- * @return 0 if successful, -1 for device driver error
+ * @return 1 if successful, -1 for device driver error
  * likely indicating driver already configured. 
  */
 int ADC_Open(unsigned int channelNum);
@@ -31,20 +31,26 @@ int ADC_Open(unsigned int channelNum);
  * indicated by masking with 0xFC00. 0xFC00 denotes device not initialized.
  * Other error codes are reserved.
  */
+
 unsigned short ADC_In(void);
 
 /**
  * @brief [brief description]
  * @details [long description]
  * 
- * @param int [description]
- * @param int [description]
- * @param short [description]
- * @param int [description]
- * @return [description]
+ * @param channelNum Channel to configure
+ * @param fs Sample Frequency (Hz)
+ * @param buffer Array to buffer data, does not bounds check buffer 
+ * @param numberOfSamples number of samples to record
+ * @return 0 if initialization successful
  */
-// int ADC_Collect(unsigned int channelNum, unsigned int fs,
-				// unsigned short buffer[], unsigned int numberOfSamples);
+int ADC_Collect(unsigned int channelNum, unsigned int fs,
+				unsigned short buffer[], unsigned int numberOfSamples);
 
+/**
+ * @brief returns 0 when ADC_collect finishes
+ * @return 0 if ADC_collect is complete
+ */
+int ADC_Status(void);
 
 #endif /*__ADC_H__*/
