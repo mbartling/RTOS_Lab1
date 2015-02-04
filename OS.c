@@ -8,6 +8,8 @@
 
 #include "OS.h"
 
+
+
 /*Private global variables */
 void (*PeriodicTask)(void); 	//!< Function pointer to periodic task */
 volatile uint32_t TaskCount;	//!< Global Counter in units specified by 
@@ -15,25 +17,33 @@ volatile uint32_t TaskCount;	//!< Global Counter in units specified by
 
 
 /**
- * @brief Initializes a 32 bit general purpose timer in uSec
+ * @brief Initializes a 32 bit general wide purpose timer in 12.5ns
  * Assume 80 MHz system clock
  * @param period period in us to set timer
  * @param priority NVIC timer priority
  * 
  * returns 0 if successful, -1 if invalid parameters given
  * Note period must be greater than 0
+ * 
+ * Uses the wide timer to keep more timers open for later projects
+ * Max time is 53.687s
  */
 int TimerOpen(unsigned long period, unsigned long priority){
 	if(period < 1 || priority < 0){
 		return -1;
 	} 
 
+	RCGCWTIMER = //Set timer src clock
+	GPTMCTL = //Ensure timer is disabled
+	GPTMCFG = 0x0000.0000; //reset config
+	GPTMTAMR = // TnMR = 0x2 for periodic mode, n = A
+
 	return 0; 
 }
 
 /**
  * Task: pointer to function to execute periodically
- * period: Period at which to execute task in us.
+ * period: Period at which to execute task in 12.5ns.
  * priority: of the NVIC controller
  * returns 0 if successful, -1 if invalid parameters given
  * note period must be greater than 0
@@ -64,4 +74,16 @@ void OS_ClearPeriodicTime(void){
  */
 unsigned long OS_ReadPeriodicTime(void){
 	return TaskCount;
+}
+
+/**
+ * @brief Increment global timer and run task
+ * 
+ */
+void WideTimer0A_Handler(void){
+	//ack timer
+
+	TaskCount++;
+	PeriodicTask();
+
 }

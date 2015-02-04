@@ -35,21 +35,22 @@ int ADC_Open(unsigned int channelNum);
 unsigned short ADC_In(void);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief Collect a sequence of ADC values
  * 
  * @param channelNum Channel to configure
- * @param fs Sample Frequency (Hz)
+ * @param fs Sample Frequency (Hz) between 100 and 10kHz
  * @param buffer Array to buffer data, does not bounds check buffer 
  * @param numberOfSamples number of samples to record
- * @return 0 if initialization successful
+ * 	must be even (multiple of two)
+ * @return 1 if initialization successful
  */
 int ADC_Collect(unsigned int channelNum, unsigned int fs,
 				unsigned short buffer[], unsigned int numberOfSamples);
 
 /**
  * @brief returns 0 when ADC_collect finishes
- * @return 0 if ADC_collect is complete
+ * @return 0 if ADC_collect is complete, , else returns the remaining
+ * number of samples to record
  */
 int ADC_Status(void);
 
