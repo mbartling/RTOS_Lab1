@@ -1,8 +1,10 @@
 // OS.h
 // Runs on the TM4C123
-// Use 32b GP periodic timer
+// Use 32b GP periodic timer to run a task periodically.
 // Michael Bartling
 // 1/31/2015
+// Lab 1
+// Last Modified: 2/3/2015
 
 #ifndef OS_H__
 #define OS_H__
@@ -26,6 +28,10 @@ int OS_AddPeriodicThread(void(*task) (void), unsigned long period,
  */
 void OS_ClearPeriodicTime(void);
 
+/**
+ * @brief Returns the current system count of the running thread
+ * @return global system count in period units of added thread
+ */
 unsigned long OS_ReadPeriodicTime(void);
 
 #endif /*OS_H__*/
