@@ -523,8 +523,7 @@ int main(void){
     }
   }
   
-  OS_AddPeriodicThread(test, 80000000,
-  2);
+  OS_AddPeriodicThread(test, 80000000, 4);
 //      ST7735_Message(0, 0, "wtf", 0);    
 
   // End Added Code

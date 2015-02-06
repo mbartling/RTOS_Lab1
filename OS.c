@@ -7,6 +7,8 @@
 // Last Modified: 2/3/2015
 
 #include "OS.h"
+#include <stdint.h>
+#include "inc/tm4c123gh6pm.h"
 
 void DisableInterrupts(void); // Disable interrupts
 void EnableInterrupts(void);  // Enable interrupts
@@ -33,6 +35,8 @@ volatile uint32_t TaskCount;	//!< Global Counter in units specified by
  * Max time is 53.687s
  */
 int TimerOpen(unsigned long period, unsigned long priority){
+	 volatile uint32_t delay;
+
 	if(period < 1 || priority < 0){
 		return -1;
 	} 
@@ -49,10 +53,10 @@ int TimerOpen(unsigned long period, unsigned long priority){
   TIMER1_TAPR_R = 0;            // prescale value for trigger
   TIMER1_TAILR_R = period-1;    // start value for trigger
   TIMER1_IMR_R  = 0x0000000;    // disable all interrupts
-  TIMER1_CTL_R |= 0x0000001;    // enable timer1A 32-b, periodic, no interrupts
-  TIMER1_IMR_R  = 0x0000001;		// enable timer1A interrupt timeout
+ // TIMER1_CTL_R |= 0x0000001;    // enable timer1A 32-b
 
   TIMER1_ICR_R |= 0x0000001;
+  TIMER1_IMR_R  = 0x0000001;		// enable timer1A interrupt timeout
 
 
   NVIC_PRI5_R = (NVIC_PRI5_R & 0xFFFF00FF) | (priority << 12); // 7) priority 
@@ -79,6 +83,7 @@ int OS_AddPeriodicThread(void(*task) (void), unsigned long period,
 		return status; // Periodic Task will not be set if TimerOpen Fails
 	} 
 
+	TaskCount = 0;
 	PeriodicTask = task;
 	return 0;
 }
@@ -104,6 +109,7 @@ unsigned long OS_ReadPeriodicTime(void){
  */
 void Timer1A_Handler(void){
 	//ack timer
+	TIMER1_ICR_R |= 0x0000001;
 
 	TaskCount++;
 	PeriodicTask();
