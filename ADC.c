@@ -335,7 +335,7 @@ int ADC_Collect(unsigned int channelNum, unsigned int fs,
   ADC0_SSCTL2_R = 0x064;          // set flag and end, 2 samples at a time                      
   ADC0_IM_R |= 0x04;             // enable SS2 interrupts
   ADC0_ACTSS_R |= 0x04;          // enable sample sequencer 2
-  NVIC_PRI4_R = (NVIC_PRI4_R&0xFFFF00FF)|0x00004000; //priority 2
+  NVIC_PRI4_R = (NVIC_PRI4_R & 0xFFFF00FF)|0x00004000; //priority 2
   NVIC_EN0_R = 1<<16;              // enable interrupt 16 in NVIC
                                    //Sample Sequencer 2
   

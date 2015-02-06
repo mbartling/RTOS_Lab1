@@ -22,7 +22,7 @@ volatile uint32_t TaskCount;	//!< Global Counter in units specified by
 
 
 /**
- * @brief Initializes a 32 bit general wide purpose timer in 12.5ns
+ * @brief Initializes a 32 bit general purpose timer in 12.5ns
  * Assume 80 MHz system clock
  * @param period period in us to set timer
  * @param priority NVIC timer priority
@@ -30,7 +30,6 @@ volatile uint32_t TaskCount;	//!< Global Counter in units specified by
  * returns 0 if successful, -1 if invalid parameters given
  * Note period must be greater than 0
  * 
- * Uses the wide timer to keep more timers open for later projects
  * Max time is 53.687s
  */
 int TimerOpen(unsigned long period, unsigned long priority){
@@ -39,19 +38,26 @@ int TimerOpen(unsigned long period, unsigned long priority){
 	} 
 
  DisableInterrupts();
-  SYSCTL_RCGCADC_R |= 0x01;     // activate ADC0 
-  SYSCTL_RCGCTIMER_R |= 0x01;   // activate timer0 
+  
+  SYSCTL_RCGCTIMER_R |= 0x02;   // activate timer1 
   delay = SYSCTL_RCGCTIMER_R;   // allow time to finish activating
 
-  TIMER0_CTL_R = 0x00000000;    // disable timer0A during setup
-  TIMER0_CTL_R |= 0x00000020;   // enable timer0A trigger to ADC
-  TIMER0_CFG_R = 0;             // configure for 32-bit timer mode
-  TIMER0_TAMR_R = 0x00000002;   // configure for periodic mode, default down-count settings
-  TIMER0_TAPR_R = 0;            // prescale value for trigger
-  TIMER0_TAILR_R = (80000000/fs)-1;    // start value for trigger
-  TIMER0_IMR_R = 0x00000000;    // disable all interrupts
-  TIMER0_CTL_R |= 0x00000001;   // enable timer0A 32-b, periodic, no interrupts
+  TIMER1_CTL_R = 0x00000000;    // disable timer1A during setup
 
+  TIMER1_CFG_R = 0;             // configure for 32-bit timer mode
+  TIMER1_TAMR_R = 0x00000002;   // configure for periodic mode, default down-count settings
+  TIMER1_TAPR_R = 0;            // prescale value for trigger
+  TIMER1_TAILR_R = period-1;    // start value for trigger
+  TIMER1_IMR_R  = 0x0000000;    // disable all interrupts
+  TIMER1_CTL_R |= 0x0000001;    // enable timer1A 32-b, periodic, no interrupts
+  TIMER1_IMR_R  = 0x0000001;		// enable timer1A interrupt timeout
+
+  TIMER1_ICR_R |= 0x0000001;
+
+
+  NVIC_PRI5_R = (NVIC_PRI5_R & 0xFFFF00FF) | (priority << 12); // 7) priority 
+  NVIC_EN0_R = 1 << 21;     // 8) enable interrupt 21 in NVIC
+  TIMER1_CTL_R |= 0x0000001;  // 9) enable timer1A
 	EnableInterrupts();
 
 	return 0; 
@@ -96,7 +102,7 @@ unsigned long OS_ReadPeriodicTime(void){
  * @brief Increment global timer and run task
  * 
  */
-void WideTimer0A_Handler(void){
+void Timer1A_Handler(void){
 	//ack timer
 
 	TaskCount++;

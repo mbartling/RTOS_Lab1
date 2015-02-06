@@ -39,6 +39,7 @@
 #include "inc/tm4c123gh6pm.h"
 #include "interpreter.h"
 #include "ADC.h"
+#include "OS.h"
 
 void DelayWait10ms(uint32_t n);
 
@@ -467,6 +468,9 @@ const uint16_t Logo[] = {
  0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF
 };
 
+void test(void){
+  printf("Hi\n");
+}
 
 int main0(void){
   PLL_Init();
@@ -519,6 +523,8 @@ int main(void){
     }
   }
   
+  OS_AddPeriodicThread(test, 80000000,
+  2);
 //      ST7735_Message(0, 0, "wtf", 0);    
 
   // End Added Code
