@@ -8,6 +8,11 @@
 
 #include "OS.h"
 
+void DisableInterrupts(void); // Disable interrupts
+void EnableInterrupts(void);  // Enable interrupts
+long StartCritical (void);    // previous I bit, disable interrupts
+void EndCritical(long sr);    // restore I bit to previous value
+void WaitForInterrupt(void);  // low power mode
 
 
 /*Private global variables */
@@ -33,10 +38,21 @@ int TimerOpen(unsigned long period, unsigned long priority){
 		return -1;
 	} 
 
-	RCGCWTIMER = //Set timer src clock
-	GPTMCTL = //Ensure timer is disabled
-	GPTMCFG = 0x0000.0000; //reset config
-	GPTMTAMR = // TnMR = 0x2 for periodic mode, n = A
+ DisableInterrupts();
+  SYSCTL_RCGCADC_R |= 0x01;     // activate ADC0 
+  SYSCTL_RCGCTIMER_R |= 0x01;   // activate timer0 
+  delay = SYSCTL_RCGCTIMER_R;   // allow time to finish activating
+
+  TIMER0_CTL_R = 0x00000000;    // disable timer0A during setup
+  TIMER0_CTL_R |= 0x00000020;   // enable timer0A trigger to ADC
+  TIMER0_CFG_R = 0;             // configure for 32-bit timer mode
+  TIMER0_TAMR_R = 0x00000002;   // configure for periodic mode, default down-count settings
+  TIMER0_TAPR_R = 0;            // prescale value for trigger
+  TIMER0_TAILR_R = (80000000/fs)-1;    // start value for trigger
+  TIMER0_IMR_R = 0x00000000;    // disable all interrupts
+  TIMER0_CTL_R |= 0x00000001;   // enable timer0A 32-b, periodic, no interrupts
+
+	EnableInterrupts();
 
 	return 0; 
 }
