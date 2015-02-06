@@ -38,6 +38,8 @@
 #include "PLL.h"
 #include "inc/tm4c123gh6pm.h"
 #include "interpreter.h"
+#include "ADC.h"
+
 void DelayWait10ms(uint32_t n);
 
 // test image
@@ -473,26 +475,51 @@ int main0(void){
   while(1){
   }
 } 
+uint16_t res_buffer[1024];
 int main(void){
 
   PLL_Init();
   UART0_Init();
-  ST7735_InitR(INITR_REDTAB);
+  //ST7735_InitR(INITR_REDTAB);
+	ADC_Open(0);
 	printf("\n[MAIN] %s:%d:%s() >> %s\n", __FILE__, __LINE__, __func__, "Starting Main LCD Test\n");
- 
+	int i=0, j, k=0;
+	uint16_t res;
+	
+	
+	while(k < 500)
+	{
+		res = ADC_In();
+		printf("%f\t", ((float)res)* 3.0/4096.0);
+//		if(i == 5){
+		//	printf("\n");
+		//	printf(">> ");
+			i = 0;
+//		}
+		i++;
+		k++;
+	}
+	printf("\nStarting collect test\n");
+	ADC_Collect(0, 10000, res_buffer, 1024);
+	
+	while(ADC_Status()){}
+	for(i = 0; i < 1024; i++){
+			printf("%f\t", ((float)res_buffer[i])* 3.0/4096.0);
+
+	}
   // Added Code
-  int i, j, k;
+  
   k = 10;
   char str[10];
   for(j = 0; j < 4; j++){
 		for(i = 0; i < 2; i++){
       sprintf(str, "Minion#%d", k);
       k++;
-      ST7735_Message(i, j, str, 0);    
+ //     ST7735_Message(i, j, str, 0);    
     }
   }
   
-      ST7735_Message(0, 0, "wtf", 0);    
+//      ST7735_Message(0, 0, "wtf", 0);    
 
   // End Added Code
   // ST7735_OutString("Graphics test\n");

@@ -5,7 +5,14 @@
 // January 2015
 
 #include "ADC.h"
+#include <stdint.h>
+#include "inc/tm4c123gh6pm.h"
 
+void DisableInterrupts(void); // Disable interrupts
+void EnableInterrupts(void);  // Enable interrupts
+long StartCritical (void);    // previous I bit, disable interrupts
+void EndCritical(long sr);    // restore I bit to previous value
+void WaitForInterrupt(void);  // low power mode
 
 
 volatile int Open = 0;				//Default to not open
@@ -36,7 +43,8 @@ uint16_t ADC_In(void){
   }
 
   ADC0_PSSI_R = 0x0008;             // 1) initiate SS3
-  while((ADC0_RIS_R&0x08)==0){};    // 2) wait for conversion done
+//  while((ADC0_RIS_R&0x08)==0){};    // 2) wait for conversion done
+//	while((ADC0_SSFSTAT3_R&0x0100)==0){};    // 2) wait for conversion done
     // if you have an A0-A3 revision number, you need to add an 8 usec wait here
   result = ADC0_SSFIFO3_R&0xFFF;    // 3) read result
   ADC0_ISC_R = 0x0008;              // 4) acknowledge completion
@@ -159,6 +167,7 @@ int ADC_Open(unsigned int channelNum)
   DisableInterrupts();
   SYSCTL_RCGCADC_R |= 0x01;     // activate ADC0 
  
+  delay = SYSCTL_RCGCTIMER_R;   // allow time to finish activating
   delay = SYSCTL_RCGCTIMER_R;   // allow time to finish activating
 
   ADC0_PC_R = 0x01;         // configure for 125K samples/sec
@@ -333,6 +342,7 @@ int ADC_Collect(unsigned int channelNum, unsigned int fs,
   Collecting = 1;
   SampleCount = 0;
   TargetCount = numberOfSamples;
+	Buffer = buffer;
   EnableInterrupts();
 
   return Collecting;
@@ -354,7 +364,7 @@ int ADC_Status(void)
 }
 
 void ADC0Seq2_Handler(void){
-  if(Collecting){
+  if(Collecting > 0){
     ADC0_ISC_R = 0x04;          // acknowledge ADC sequence 2 completion
 
     Buffer[SampleCount++] = ADC0_SSFIFO2_R;  // 12-bit result
