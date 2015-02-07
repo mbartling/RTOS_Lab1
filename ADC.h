@@ -43,6 +43,8 @@ unsigned short ADC_In(void);
  * @param numberOfSamples number of samples to record
  * 	must be even (multiple of two)
  * @return 1 if initialization successful
+ * 
+ * To be safe, buffer must be global buffer
  */
 int ADC_Collect(unsigned int channelNum, unsigned int fs,
 				unsigned short buffer[], unsigned int numberOfSamples);
