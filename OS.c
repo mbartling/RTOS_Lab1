@@ -16,6 +16,26 @@ long StartCritical (void);    // previous I bit, disable interrupts
 void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
 
+#define MODE_MEASURE_ISR 1
+
+#if MODE_MEASURE_ISR
+// Taken from ST7735 test main
+
+#define PF2   (*((volatile uint32_t *)0x40025010))
+//    PF2 ^= 0x04;
+
+// Make PF2 an output, enable digital I/O, ensure alt. functions off
+void SSR_Init(void){ 
+  SYSCTL_RCGCGPIO_R |= 0x20;        // 1) activate clock for Port F
+  while((SYSCTL_PRGPIO_R&0x20)==0){}; // allow time for clock to start
+                                    // 2) no need to unlock PF2
+  GPIO_PORTF_PCTL_R &= ~0x00000F00; // 3) regular GPIO
+  GPIO_PORTF_AMSEL_R &= ~0x04;      // 4) disable analog function on PF2
+  GPIO_PORTF_DIR_R |= 0x04;         // 5) set direction to output
+  GPIO_PORTF_AFSEL_R &= ~0x04;      // 6) regular port function
+  GPIO_PORTF_DEN_R |= 0x04;         // 7) enable digital port
+}
+#endif
 
 /*Private global variables */
 void (*PeriodicTask)(void); 	//!< Function pointer to periodic task */
@@ -82,6 +102,9 @@ int OS_AddPeriodicThread(void(*task) (void), unsigned long period,
 	if(status < 0){
 		return status; // Periodic Task will not be set if TimerOpen Fails
 	} 
+  #if MODE_MEASURE_ISR
+  SSR_Init();
+  #endif
 
 	TaskCount = 0;
 	PeriodicTask = task;
@@ -108,10 +131,16 @@ unsigned long OS_ReadPeriodicTime(void){
  * 
  */
 void Timer1A_Handler(void){
+#if MODE_MEASURE_ISR
+  PF2 ^= 0x04; // Toggle PF2 Bit
+#endif
 	//ack timer
 	TIMER1_ICR_R |= 0x0000001;
 
 	TaskCount++;
 	PeriodicTask();
+#if MODE_MEASURE_ISR
+  PF2 ^= 0x04;
+#endif
 
 }
